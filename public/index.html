@@ -1,1 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ExamMate</title>
+<link rel="icon" type="image/png" href="ExamMate.png">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,sans-serif;}
+  body{
+    background:#0b1120;
+    min-height:100vh;
+    overflow-y:auto;
+    color:white;
+  }
+
+  /* ---------------------- INTRO ANIMATION ---------------------- */
+  #introScreen{
+    position:fixed;
+    inset:0;
+    background:#000;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:9999;
+    animation: introFade 2.4s forwards ease-in-out;
+    flex-direction:column;
+  }
+  @keyframes introFade{
+    0%{opacity:1}
+    60%{opacity:1}
+    100%{opacity:0;visibility:hidden}
+  }
+  #introLogo{
+    width:300px;
+    animation: zoom 1.8s ease-in-out forwards;
+  }
+  @keyframes zoom{
+    0%{transform:scale(0.3);opacity:0}
+    50%{transform:scale(1.05);opacity:1}
+    100%{transform:scale(1);opacity:1}
+  }
+
+  /* ---------------------- PARTICLES ---------------------- */
+  #particles{
+    position:fixed;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  .main-container{
+    position:relative;
+    z-index:2;
+    padding:30px;
+  }
+
+  /* LOGO + NAME */
+  .header{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:25px;
+  }
+
+  .logo{
+    width:170px;
+    border-radius:12px;
+    box-shadow:0 0 24px rgba(0,255,255,0.7);
+  }
+
+  .brand{
+    font-size:38px;
+    font-weight:800;
+    color:white;
+    text-shadow:0 0 20px rgba(0,255,255,0.6);
+  }
+
+  /* MAIN BOX */
+  .shell{
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:20px;
+    padding:25px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:25px;
+  }
+  @media(max-width:900px){.grid{grid-template-columns:1fr;}}
+
+  /* FORM LABELS — UPDATED */
+  label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:700;
+    font-size:17px;
+    color:white;
+  }
+
+  input,textarea{
+    width:100%;
+    padding:12px;
+    border-radius:12px;
+    border:1px solid #475569;
+    background:#1e293b;
+    color:white;
+    outline:none;
+    resize:none;
+  }
+
+  input::placeholder,
+  textarea::placeholder{
+    color:rgba(255,255,255,0.45);
+  }
+
+  .marks-buttons{
+    display:flex;
+    gap:10px;
+    margin-bottom:12px;
+  }
+
+  .marks-btn{
+    padding:7px 14px;
+    border-radius:999px;
+    border:1px solid #475569;
+    background:#1e293b;
+    color:rgba(255,255,255,0.7);
+    cursor:pointer;
+  }
+  .marks-btn.active{
+    background:#22c55e;
+    color:white;
+    border-color:#22c55e;
+  }
+
+  .generate-btn{
+    background:linear-gradient(120deg,#22c55e,#0ea5e9);
+    padding:12px 26px;
+    border:none;
+    border-radius:999px;
+    color:white;
+    cursor:pointer;
+    font-size:16px;
+  }
+
+  h3{
+    font-size:20px;
+    font-weight:800;
+    margin-bottom:10px;
+    color:white;
+  }
+
+  .answer-box{
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.18);
+    border-radius:18px;
+    padding:20px;
+    min-height:350px;
+    max-height:450px;
+    overflow-y:auto;
+    font-size:15px;
+    color:white;
+  }
+
+  /* SCROLLBAR */
+  .answer-box::-webkit-scrollbar{width:6px;}
+  .answer-box::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,0.25);
+    border-radius:6px;
+  }
+
+  /* TOOLBAR */
+  .toolbar{
+    display:flex;
+    gap:12px;
+    margin-top:10px;
+  }
+
+  .tool-btn{
+    padding:8px 14px;
+    background:#334155;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:14px;
+    color:white;
+  }
+
+  /* HISTORY MODAL */
+  #historyBox{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.85);
+    z-index:5000;
+    display:none;
+    padding:30px;
+  }
+  #historyContent{
+    background:#111827;
+    max-width:700px;
+    margin:auto;
+    padding:20px;
+    border-radius:12px;
+    overflow-y:auto;
+    max-height:80vh;
+  }
+  #closeHistory{
+    float:right;
+    cursor:pointer;
+    font-weight:900;
+    color:red;
+  }
+
+  /* CUSTOM COPY TOAST */
+  #toast {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    background: rgba(0,0,0,0.9);
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 0 12px rgba(0,255,255,0.5);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all .4s ease;
+    z-index: 99999;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+
+</style>
+</head>
+
+<body>
+
+<!-- INTRO -->
+<div id="introScreen">
+  <img src="ExamMate.png" id="introLogo">
+</div>
+
+<canvas id="particles"></canvas>
+
+<div class="main-container">
+  <div class="header">
+    <img src="ExamMate.png" class="logo">
+    <div class="brand">ExamMate</div>
+  </div>
+
+  <div class="shell">
+    <div class="grid">
+      <!-- LEFT FORM -->
+      <div>
+        <label>Subject</label>
+        <input id="subject" placeholder="e.g. Operating Systems">
+
+        <label style="margin-top:12px;">Question</label>
+        <textarea id="question" placeholder="Write question here..."></textarea>
+
+        <label style="margin-top:12px;">Marks</label>
+        <div class="marks-buttons">
+          <button class="marks-btn active" data-m="1">1</button>
+          <button class="marks-btn" data-m="5">5</button>
+          <button class="marks-btn" data-m="10">10</button>
+        </div>
+
+        <button class="generate-btn" id="generateBtn">Generate Answer</button>
+      </div>
+
+      <!-- RIGHT ANSWER -->
+      <div>
+        <h3>ANSWER</h3>
+        <div id="answerBox" class="answer-box">Your answer will appear here…</div>
+
+        <div class="toolbar">
+          <div class="tool-btn" id="copyBtn">📋 Copy</div>
+          <div class="tool-btn" id="printBtn">🖨 Print PDF</div>
+          <div class="tool-btn" id="historyBtn">📁 History</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY MODAL -->
+<div id="historyBox">
+  <div id="historyContent">
+    <span id="closeHistory">X</span>
+    <h2 style="margin-bottom:12px;">Saved Answer History</h2>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<!-- CUSTOM TOAST -->
+<div id="toast">✔ ExamMate — Copied!</div>
+
+<!-- PARTICLES JS -->
+<script>
+const canvas = document.getElementById("particles");
+const ctx = canvas.getContext("2d");
+
+let particles = [];
+function resize(){
+  canvas.width = innerWidth;
+  canvas.height = innerHeight;
+}
+resize();
+addEventListener("resize", resize);
+
+for(let i=0;i<80;i++){
+  particles.push({ x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*2+1, s:Math.random()*1+0.2 });
+}
+
+function animate(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  particles.forEach(p=>{
+    ctx.fillStyle="rgba(255,255,255,0.65)";
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+    p.y+=p.s;
+    if(p.y > canvas.height) p.y=0;
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<!-- FRONTEND JS -->
+<script>
+let selectedMarks = 1;
+document.querySelectorAll(".marks-btn").forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll(".marks-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedMarks = parseInt(btn.dataset.m);
+  };
+});
+
+document.getElementById("generateBtn").onclick = async ()=>{
+  const subject = document.getElementById("subject").value.trim();
+  const question = document.getElementById("question").value.trim();
+  const answerBox = document.getElementById("answerBox");
+
+  if(!subject || !question){
+    answerBox.innerHTML = "⚠️ Please enter subject & question.";
+    return;
+  }
+  answerBox.innerHTML = "⏳ Generating answer…";
+
+  const res = await fetch("http://localhost:5000/api/answer", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({ subject, question, marks:selectedMarks })
+  });
+
+  const data = await res.json();
+  const finalAns = data.answer.replace(/\n/g,"<br>");
+  answerBox.innerHTML = finalAns;
+
+  // SAVE HISTORY
+  let history = JSON.parse(localStorage.getItem("examMateHistory") || "[]");
+  history.push({ subject, question, answer:data.answer });
+  localStorage.setItem("examMateHistory", JSON.stringify(history));
+};
+
+/* COPY WITH CUSTOM TOAST */
+document.getElementById("copyBtn").onclick = ()=>{
+  const text = document.getElementById("answerBox").innerText;
+  navigator.clipboard.writeText(text);
+
+  let toast = document.getElementById("toast");
+  toast.classList.add("show");
+  setTimeout(()=> toast.classList.remove("show"),1800);
+}
+
+/* PRINT PDF */
+document.getElementById("printBtn").onclick = ()=>{
+  let w = window.open("");
+  w.document.write("<pre style='font-size:16px;font-family:system-ui;'>"+document.getElementById("answerBox").innerText+"</pre>");
+  w.print();
+}
+
+/* HISTORY MODAL */
+document.getElementById("historyBtn").onclick = ()=>{
+  document.getElementById("historyBox").style.display="block";
+
+  let history = JSON.parse(localStorage.getItem("examMateHistory") || "[]");
+  let list = "";
+  history.forEach(h=>{
+    list += `<div style='padding:10px;border-bottom:1px solid #333;margin-bottom:8px;'>
+      <b>Subject:</b> ${h.subject}<br>
+      <b>Question:</b> ${h.question}<br><br>
+      ${h.answer.replace(/\n/g,"<br>")}
+    </div>`;
+  });
+  document.getElementById("historyList").innerHTML = list || "No history yet.";
+};
+
+document.getElementById("closeHistory").onclick = ()=>{
+  document.getElementById("historyBox").style.display="none";
+};
+</script>
+
+</body>
+</html>
